@@ -41,15 +41,40 @@ func main() {
 	fmt.Printf("aa = %d, bb = %d, cc = %d\n", aa, bb, cc)
 
 	//golang中没有enum，可以用const实现
-	const {
-		Sunday = iota  	//大写字母开头，包外可见
+	const (
+		Sunday = iota //大写字母开头，包外可见
 		Monday
-		Friday
+		Tuesday
 		Wednesday
 		Thursday
 		Friday
 		Saturday
-		numberOfDays  //小写字母开头，包外不可见
-	}
+		numberOfDays //小写字母开头，包外不可见
+	)
+
+	//bool类型不能接受其他类型的赋值，不支持自动或强制类型转换
+	//	var v1 bool
+	//	v1 = 1 // 编译出错  cannot use 1 (type int) as type bool in assignment
+
+	// int int32是两张不同的类型，不能互相赋值
+	var value2 int32
+	value1 := 64 // 自动推导为int
+	//	value1 = value2 // 编译出错 cannot use value2 (type int32) as type int in assignment
+	value2 = int32(value1) // 编译通过
+	fmt.Println("value2=", value2)
+
+	fmt.Println(5 % 3)
+
+	// 不同类型的整型不能直接比较
+	/**/
+
+	var ii int32
+	var jj int64
+	ii, jj = 1, 2
+
+	//编译出错
+	//	if ii == jj { // invalid operation: ii == jj (mismatched types int32 and int64)
+	//		fmt.Println("ii and jj are not equal")
+	//	}
 
 }
