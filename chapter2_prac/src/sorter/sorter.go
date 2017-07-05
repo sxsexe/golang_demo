@@ -6,6 +6,7 @@ package main
 
 import (
 	"algorithms/bubblesort" // import子目录名字
+	"algorithms/quicksort"
 	"bufio"
 	"flag"
 	"fmt"
@@ -91,6 +92,11 @@ func main() {
 		switch *algorithm {
 		case "bubblesort":
 			MyBubbleSort.BubbleSort(values)
+			fmt.Println("Write values:", values)
+			writeOutValues(values, *outfile)
+
+		case "qsort":
+			quicksort.QuickSort(values)
 			fmt.Println("Write values:", values)
 			writeOutValues(values, *outfile)
 
