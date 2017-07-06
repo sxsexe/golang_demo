@@ -94,7 +94,7 @@ func main() {
 	fmt.Printf("area1=%f, area2=%f, area3=%f, area4=%f \n", area1, area2, area3, area4)
 
 	//GO中没有构造函数的概念,一般使用一个全局函数NewXXX完成
-	rect5 := NewRect(0, 0, 20, 13)
+	rect5 := NewRect(0, 0, 200, 13)
 	area5 := rect5.Area()
 	fmt.Println("area5=", area5)
 
