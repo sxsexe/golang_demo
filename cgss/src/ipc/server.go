@@ -33,7 +33,9 @@ func (server *IpcServer) Connect() chan string {
 
 	go func(c chan string) {
 		for {
+			fmt.Println("Connect : waiting for client")
 			request := <-c
+			fmt.Println("Connect : client comming, req = ", request)
 			if request == "CLOSE" {
 				break
 			}
@@ -44,6 +46,8 @@ func (server *IpcServer) Connect() chan string {
 				fmt.Println("Invalid request format:", request)
 			}
 
+			// 这里的server是IPCServer，通过Go语言的组合“继承”方式，实际上是调用
+			// ipcServer.Server.Handle
 			resp := server.Handle(req.Method, req.Params)
 
 			b, err := json.Marshal(resp)
