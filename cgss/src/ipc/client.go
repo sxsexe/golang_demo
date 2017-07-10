@@ -1,6 +1,7 @@
 package ipc
 
 import "encoding/json"
+import "fmt"
 
 type IpcClient struct {
 	conn chan string
@@ -20,8 +21,9 @@ func (client *IpcClient) Call(method, params string) (resp *Response, err error)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("Client Call ", method, " params= ", string(b))
 	client.conn <- string(b)
+	fmt.Println("Client Waiting for resp ", method, " params= ", string(b))
 	str := <-client.conn // 等待返回值
 
 	var resp1 Response

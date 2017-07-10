@@ -5,6 +5,7 @@ package cg
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 
 	"ipc"
@@ -104,6 +105,7 @@ func (server *CenterServer) broadcast(params string) error {
 }
 
 func (server *CenterServer) Handle(method, params string) *ipc.Response {
+	fmt.Println("CenterServer Handle method = ", method)
 	switch method {
 	case "addPlayer":
 		err := server.addPlayer(params)
