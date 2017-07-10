@@ -17,6 +17,7 @@ func NewPlayer() *Player {
 
 	go func(p *Player) {
 		for {
+			fmt.Printf("Player %s is waitring for message\n", p.Name)
 			msg := <-p.mq // 阻塞等待消息
 			fmt.Println(p.Name, "received message:", msg.Content)
 		}
