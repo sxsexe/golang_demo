@@ -39,6 +39,7 @@ func Quit(args []string) int {
 }
 
 func Logout(args []string) int {
+	fmt.Println("Logout args ", args)
 	if len(args) != 2 {
 		fmt.Println("USAGE: logout <username>")
 		return 0
@@ -49,6 +50,7 @@ func Logout(args []string) int {
 }
 
 func Login(args []string) int {
+	fmt.Println("Login args ", args)
 	if len(args) != 4 {
 		fmt.Println("USAGE: login <username> <level> <exp>")
 		return 0
@@ -80,6 +82,7 @@ func Login(args []string) int {
 }
 
 func ListPlayers(args []string) int {
+	fmt.Println("ListPlayers args ", args)
 	ps, err := centerClient.ListPlayer("")
 	if err != nil {
 		fmt.Println("Failed to ListPlayers ", err)
@@ -93,6 +96,7 @@ func ListPlayers(args []string) int {
 }
 
 func Send(args []string) int {
+	fmt.Println("Send args ", args)
 	message := strings.Join(args[1:], " ")
 	err := centerClient.Broadcast(message)
 	if err != nil {
