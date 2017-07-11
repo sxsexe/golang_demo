@@ -11,6 +11,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -22,12 +23,23 @@ const (
 	UPLOAD_DIR = "./upload"
 )
 
+func renderHtml(w http.ResponseWriter, tml string, locals map[string]interface{}) error {
+	t, err := template.ParseFiles(tml + ".html")
+	if err != nil {
+		return err
+	}
+
+	err = t.Execute(w, locals)
+	return err
+}
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		io.WriteString(w, "<form method=\"POST\" action=\"/upload\" "+
-			" enctype=\"multipart/form-data\">"+
-			"Choose an image to upload: <input name=\"image\" type=\"file\" />"+"<input type=\"submit\" value=\"Upload\" />"+
-			"</form>")
+		err := renderHtml(w, "upload", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	} else if r.Method == "POST" {
 		f, h, err := r.FormFile("image")
 		if err != nil {
@@ -59,6 +71,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	imageId := r.FormValue("id")
 	imagePath := UPLOAD_DIR + "/" + imageId
+	fmt.Println("view ", imagePath)
 	if exist := isFileExists(imagePath); !exist {
 		http.NotFound(w, r)
 		return
@@ -84,15 +97,17 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var listHtml string
+	locals := make(map[string]interface{})
+	images := []string{}
 	for _, fileInfo := range fileInfoArr {
-		imgid := fileInfo.Name() //这里和教程上不一样，SDK改了？
-		listHtml += "<li><a href=\"/view?id=" + string(imgid) + "\">imgid</a></li>"
+		images = append(images, fileInfo.Name())
 	}
-	if len(listHtml) == 0 {
-		io.WriteString(w, "Nothing Here ! Upload first")
-	} else {
-		io.WriteString(w, "<ol>"+listHtml+"</ol>")
+	fmt.Println("list ", images)
+	locals["images"] = images
+	err = renderHtml(w, "list", locals)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 }
