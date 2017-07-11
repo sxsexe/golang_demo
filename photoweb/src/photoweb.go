@@ -17,19 +17,46 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"strings"
+	"time"
 )
 
 const (
-	UPLOAD_DIR = "./upload"
+	UPLOAD_DIR   = "./upload"
+	TEMPLATE_DIR = "./views"
 )
 
-func renderHtml(w http.ResponseWriter, tml string, locals map[string]interface{}) error {
-	t, err := template.ParseFiles(tml + ".html")
-	if err != nil {
-		return err
-	}
+var gTemplates map[string]*template.Template = make(map[string]*template.Template)
 
-	err = t.Execute(w, locals)
+//在main之前执行
+func init() {
+	fileInfoArr, err := ioutil.ReadDir(TEMPLATE_DIR)
+	if err != nil {
+		panic(err)
+		return
+	}
+	t1 := time.Now()
+
+	var templateName, templatePath string
+	for _, fileInfo := range fileInfoArr {
+		templateName = fileInfo.Name()
+		if exist := path.Ext(templateName); exist != ".html" {
+			continue
+		}
+		templatePath = TEMPLATE_DIR + "/" + templateName
+		log.Println("Load Template : ", templatePath)
+		t := template.Must(template.ParseFiles(templatePath))
+		tmpl := strings.TrimSuffix(templateName, ".html")
+		gTemplates[tmpl] = t
+	}
+	t2 := time.Now()
+	log.Println("Loading Templates took ", t2.Sub(t1))
+
+}
+
+func renderHtml(w http.ResponseWriter, tml string, locals map[string]interface{}) error {
+	err := gTemplates[tml].Execute(w, locals)
 	return err
 }
 
