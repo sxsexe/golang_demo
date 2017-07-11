@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -32,10 +33,7 @@ var gTemplates map[string]*template.Template = make(map[string]*template.Templat
 //在main之前执行
 func init() {
 	fileInfoArr, err := ioutil.ReadDir(TEMPLATE_DIR)
-	if err != nil {
-		panic(err)
-		return
-	}
+	checkErr(err)
 	t1 := time.Now()
 
 	var templateName, templatePath string
@@ -63,30 +61,19 @@ func renderHtml(w http.ResponseWriter, tml string, locals map[string]interface{}
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		err := renderHtml(w, "upload", nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		checkErr(err)
 	} else if r.Method == "POST" {
 		f, h, err := r.FormFile("image")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		checkErr(err)
 
 		filename := h.Filename
 		defer f.Close()
 		t, err := os.Create(UPLOAD_DIR + "/" + filename)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		checkErr(err)
 		defer t.Close()
 
-		if _, err := io.Copy(t, f); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		_, err = io.Copy(t, f)
+		checkErr(err)
 
 		http.Redirect(w, r, "/vie?/id="+filename, http.StatusFound)
 
@@ -119,10 +106,7 @@ func isFileExists(path string) bool {
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
 	fileInfoArr, err := ioutil.ReadDir(UPLOAD_DIR)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	checkErr(err)
 
 	locals := make(map[string]interface{})
 	images := []string{}
@@ -139,12 +123,33 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if e, ok := recover().(error); ok {
+				http.Error(w, e.Error(), http.StatusInternalServerError) // 或者输出自定义的 50x 错误页面
+				w.WriteHeader(http.StatusInternalServerError)
+
+				log.Println("WARN : painc in %v - %v", fn, e)
+				log.Println(string(debug.Stack()))
+			}
+		}()
+		fn(w, r)
+	}
+}
+
 func main() {
 
-	http.HandleFunc("/upload", uploadHandler)
-	http.HandleFunc("/view", viewHandler)
-	http.HandleFunc("/list", listHandler)
-	http.HandleFunc("/", listHandler)
+	http.HandleFunc("/upload", safeHandler(uploadHandler))
+	http.HandleFunc("/view", safeHandler(viewHandler))
+	http.HandleFunc("/list", safeHandler(listHandler))
+	http.HandleFunc("/", safeHandler(listHandler))
 
 	err := http.ListenAndServe("127.0.0.1:8080", nil)
 	if err != nil {
